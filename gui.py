@@ -1,12 +1,10 @@
 # gui.py
 import customtkinter as ctk
 from tkinter import filedialog, messagebox
-
-import pdfplumber
-
 from qa import get_answer
 from summarize import summarize_text
 import threading
+from pdf_extractor import extract_text_with_progress
 
 # Set the appearance and scaling
 ctk.set_appearance_mode("System")
@@ -24,9 +22,9 @@ class BasicApp(ctk.CTk):
         self.label = ctk.CTkLabel(self, text="Welcome to the PDF Summarizer and Q&A App!", font=("Arial", 16))
         self.label.pack(pady=10)
 
-        # PDF Drop Area
-        self.drop_area = ctk.CTkButton(self, text="Load PDF", command=self.open_pdf)
-        self.drop_area.pack(pady=10)
+        # PDF Load Button
+        self.load_pdf_button = ctk.CTkButton(self, text="Load PDF", command=self.open_pdf)
+        self.load_pdf_button.pack(pady=10)
 
         # Progress Bar for PDF Extraction
         self.progress_bar = ctk.CTkProgressBar(self, width=500)
@@ -66,35 +64,38 @@ class BasicApp(ctk.CTk):
         file_path = filedialog.askopenfilename(filetypes=[("PDF files", "*.pdf")])
         if file_path:
             # Start extraction in a separate thread
-            threading.Thread(target=self.extract_text_with_progress, args=(file_path,)).start()
+            threading.Thread(target=self.extract_text_thread, args=(file_path,)).start()
 
-    def extract_text_with_progress(self, file_path):
-        self.extracted_text = ''
+    def extract_text_thread(self, file_path):
         try:
-            with pdfplumber.open(file_path) as pdf:
-                total_pages = len(pdf.pages)
-                for i, page in enumerate(pdf.pages):
-                    page_text = page.extract_text()
-                    if page_text:
-                        self.extracted_text += page_text + '\n'
-                    else:
-                        print(f"No text found on page {i + 1}.")
-                    # Update progress bar
-                    progress = (i + 1) / total_pages
-                    self.progress_bar.set(progress)
-            self.progress_bar.set(0)
-            messagebox.showinfo("PDF Loaded", "PDF text successfully extracted!")
+            self.extracted_text = ''
+            # Call the extract_text_with_progress function from pdf_extractor.py
+            def progress_callback(progress):
+                # Schedule the progress bar update in the main thread
+                self.after(0, self.progress_bar.set, progress)
+            self.extracted_text = extract_text_with_progress(file_path, progress_callback)
+            # Reset the progress bar and show a message when done
+            self.after(0, self.progress_bar.set, 0)
+            self.after(0, messagebox.showinfo, "PDF Loaded", "PDF text successfully extracted!")
         except Exception as e:
             print(f"An error occurred: {e}")
-            messagebox.showerror("Error", f"An error occurred: {e}")
+            self.after(0, messagebox.showerror, "Error", f"An error occurred: {e}")
 
     def summarize_pdf(self):
         if self.extracted_text:
-            self.summarized_text = summarize_text(self.extracted_text)
-            self.summary_display.delete("1.0", "end")
-            self.summary_display.insert("1.0", self.summarized_text)
+            # Perform summarization in a separate thread
+            threading.Thread(target=self.summarize_thread).start()
         else:
             messagebox.showwarning("No Text", "Please load a PDF first.")
+
+    def summarize_thread(self):
+        self.summarized_text = summarize_text(self.extracted_text)
+        # Update the summary display in the main thread
+        self.after(0, self.update_summary_display)
+
+    def update_summary_display(self):
+        self.summary_display.delete("1.0", "end")
+        self.summary_display.insert("1.0", self.summarized_text)
 
     def ask_question(self):
         question = self.question_entry.get()
@@ -106,7 +107,14 @@ class BasicApp(ctk.CTk):
 
     def get_answer_thread(self, question):
         answer = get_answer(question, self.extracted_text)
+        # Update the answer display in the main thread
+        self.after(0, self.update_answer_display, answer)
+
+    def update_answer_display(self, answer):
         self.answer_display.configure(text=f"Answer: {answer['answer']}")
+
+    def quit(self):
+        self.destroy()
 
 if __name__ == "__main__":
     app = BasicApp()

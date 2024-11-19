@@ -6,4 +6,4 @@ INDEX_DIR = '../data/index/'
 SPACY_MODEL = 'en_core_web_sm'
 
 # Summarization Model
-SUMMARIZATION_MODEL = 't5-small'
+SUMMARIZATION_MODEL = 'google/pegasus-xsum'
