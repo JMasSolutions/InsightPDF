@@ -1,6 +1,9 @@
 import spacy
 import subprocess
 import sys
+
+from transformers import AutoTokenizer, AutoModelForQuestionAnswering
+
 from env.config import SPACY_MODEL
 
 def download_spacy_model(model_name=SPACY_MODEL):
