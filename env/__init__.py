@@ -1,13 +1,16 @@
-import platform
+import torch
 
-def get_device_info():
-    device_info = {
-        'platform': platform.system(),
-        'platform_version': platform.release(),
-        'architecture': platform.machine(),
-        'python_version': platform.python_version(),
-    }
-    return device_info
+def get_device():
+    if torch.mps.is_available():
+        device = torch.device('mps')
+        print("Device being used:", device)
+    elif torch.cuda.is_available():
+        device = torch.device('cuda')
+        print("Device being used:", device)
+    else:
+        device = torch.device('cpu')
+        print("Device being used:", device)
+    return device
 
 # Initialize device information
-DEVICE_INFO = get_device_info()
+DEVICE_INFO = get_device()
