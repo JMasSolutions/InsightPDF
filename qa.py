@@ -1,17 +1,17 @@
-# qa.py
 import os
 from transformers import pipeline
+
+from env import DEVICE_INFO
+from env.config import QUESTION_ANSWERING_MODEL
 
 # Suppress the tokenizer parallelism warning
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-# Initialize device (use CPU if DEVICE_INFO is not defined)
-DEVICE_INFO = -1
-
-# Initialize the QA model once
+# Initialize the QA model with deepset/roberta-base-squad2
 qa_model = pipeline(
     "question-answering",
-    model="bert-large-uncased-whole-word-masking-finetuned-squad",
+    model=QUESTION_ANSWERING_MODEL,
+    tokenizer=QUESTION_ANSWERING_MODEL,
     framework="pt",
     device=DEVICE_INFO
 )
