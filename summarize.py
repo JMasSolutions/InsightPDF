@@ -1,5 +1,3 @@
-import re
-import torch
 from transformers import AutoTokenizer, pipeline
 
 from env import DEVICE_INFO
