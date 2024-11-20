@@ -1,3 +1,5 @@
+# setup.py
+
 from setuptools import setup, find_packages
 from setuptools.command.install import install
 import subprocess
