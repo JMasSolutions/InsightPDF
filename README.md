@@ -2,6 +2,7 @@
 
 ## InsightPDF
 
+![InsightPDF_preview (2)](https://github.com/user-attachments/assets/e8999a54-5893-4905-8058-07ba4e0d91aa)
 
   
 InsightPDF is a Python-based desktop application designed to provide a seamless and secure way to interact with PDF content directly on your device. With InsightPDF, you can upload PDFs, extract and summarize their content, and ask questions about specific information within the text—without needing an internet connection. This offline functionality ensures complete privacy and is especially useful for sensitive or confidential documents.  
