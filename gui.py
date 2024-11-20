@@ -1,9 +1,11 @@
+#gui.py
+
 import customtkinter as ctk
 from tkinter import filedialog, messagebox
-from qa import get_answer
-from summarize import summarize_text_advanced
+from scripts.qa import get_answer
+from scripts.summarize import summarize_text_advanced
 import threading
-from pdf_extractor import extract_text_with_progress
+from scripts.pdf_extractor import extract_text_with_progress
 
 # Set the appearance and scaling
 ctk.set_appearance_mode("System")

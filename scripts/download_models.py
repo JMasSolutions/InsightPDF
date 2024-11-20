@@ -1,4 +1,5 @@
-# download_models.py
+# scripts/download_models.py
+
 import os
 import spacy
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, AutoModelForQuestionAnswering

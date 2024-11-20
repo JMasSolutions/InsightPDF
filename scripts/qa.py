@@ -1,3 +1,5 @@
+# scripts/qa.py
+
 import os
 from transformers import pipeline
 

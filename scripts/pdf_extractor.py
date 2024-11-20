@@ -1,3 +1,5 @@
+# scripts/pdf_extractor.py
+
 import pdfplumber
 
 def extract_text_with_progress(file_path, progress_callback):
