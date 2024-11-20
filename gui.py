@@ -14,45 +14,86 @@ class BasicApp(ctk.CTk):
         super().__init__()
 
         # Configure the main window
-        self.title("PDF Summarizer and Q&A App")
-        self.geometry("600x700")
+        self.title("InsightPDF")
+        self.geometry("800x600")
+        self.resizable(False, False)
 
-        # Title Label
-        self.label = ctk.CTkLabel(self, text="Welcome to the PDF Summarizer and Q&A App!", font=("Arial", 16))
-        self.label.pack(pady=10)
+        # Center the window
+        self.update_idletasks()
+        screen_width = self.winfo_screenwidth()
+        screen_height = self.winfo_screenheight()
+        x = (screen_width - 800) // 2  # 800 is the window width
+        y = (screen_height - 600) // 2  # 600 is the window height
+        self.geometry(f"800x600+{x}+{y}")
 
-        # PDF Load Button
-        self.load_pdf_button = ctk.CTkButton(self, text="Load PDF", command=self.open_pdf)
-        self.load_pdf_button.pack(pady=10)
+        # Sidebar Frame on the left for buttons with background color
+        self.sidebar_frame = ctk.CTkFrame(self, width=200, corner_radius=10)
+        self.sidebar_frame.pack(side="left", fill="y", padx=(20, 10), pady=20)
 
-        # Progress Bar for PDF Extraction
-        self.progress_bar = ctk.CTkProgressBar(self, width=500)
-        self.progress_bar.pack(pady=10)
-        self.progress_bar.set(0)
+        # Sidebar Buttons
+        self.load_pdf_button = ctk.CTkButton(
+            self.sidebar_frame, text="Load PDF", command=self.open_pdf,
+            font=("Arial", 14, "bold"), corner_radius=8
+        )
+        self.load_pdf_button.pack(pady=10, padx=10, fill="x")
 
-        # Button to Summarize PDF - Standard and Advanced
-        self.summarize_button_standard = ctk.CTkButton(self, text="Summarize PDF", command=self.summarize_pdf_advanced)
-        self.summarize_button_standard.pack(pady=10)
+        self.summarize_button = ctk.CTkButton(
+            self.sidebar_frame, text="Summarize PDF", command=self.summarize_pdf_advanced,
+            font=("Arial", 14, "bold"), corner_radius=8
+        )
+        self.summarize_button.pack(pady=10, padx=10, fill="x")
 
-        # Display Area for Summarized Text
-        self.summary_display = ctk.CTkTextbox(self, width=500, height=150)
-        self.summary_display.pack(pady=10)
+        self.ask_button = ctk.CTkButton(
+            self.sidebar_frame, text="Ask Question", command=self.ask_question,
+            font=("Arial", 14, "bold"), corner_radius=8
+        )
+        self.ask_button.pack(pady=10, padx=10, fill="x")
 
-        # Question Entry Box
-        self.question_entry = ctk.CTkEntry(self, placeholder_text="Ask a question about the PDF content")
-        self.question_entry.pack(pady=10)
+        # Quit Button at the very bottom of the sidebar
+        self.quit_button = ctk.CTkButton(
+            self.sidebar_frame, text="Quit", command=self.quit,
+            font=("Arial", 14, "bold"), corner_radius=8
+        )
+        self.quit_button.pack(side="bottom", pady=10, padx=10, fill="x")
 
-        # Button to Ask Question
-        self.ask_button = ctk.CTkButton(self, text="Ask Question", command=self.ask_question)
-        self.ask_button.pack(pady=10)
+        # Clear Button with the other main buttons
+        self.clear_button = ctk.CTkButton(
+            self.sidebar_frame, text="Clear", command=self.clear_content,
+            font=("Arial", 14, "bold"), corner_radius=8
+        )
+        self.clear_button.pack(side="bottom",pady=10, padx=10, fill="x")
 
-        # Display Answer
-        self.answer_display = ctk.CTkLabel(self, text="", font=("Arial", 12))
-        self.answer_display.pack(pady=10)
+        # Status Label above the Quit button
+        self.status_label = ctk.CTkLabel(
+            self.sidebar_frame, text="Status: Ready", font=("Arial", 13, "bold"), text_color="white"
+        )
+        self.status_label.pack(side="bottom", pady=10, padx=0, fill="x")
 
-        # Quit Button
-        self.quit_button = ctk.CTkButton(self, text="Quit", command=self.quit)
-        self.quit_button.pack(pady=10)
+
+        # Main Frame for displaying content
+        self.main_frame = ctk.CTkFrame(self, corner_radius=10)
+        self.main_frame.pack( side="right", fill="both", expand=True, padx=(10, 20), pady=20)
+
+        # Summary Display with larger font for summaries
+        self.summary_display = ctk.CTkTextbox(
+            self.main_frame, width=500, height=250, corner_radius=10, font=("Arial", 15), wrap="word"
+        )
+        self.summary_display.pack(pady=(20, 10), padx=20, fill="both", expand=True)
+        self.summary_display.configure(state="disabled")
+
+        # Question Entry Box with larger font and height
+        self.question_entry = ctk.CTkEntry(
+            self.main_frame, placeholder_text="Ask a question about the PDF content",
+            font=("Arial", 13), height=40, corner_radius=8
+        )
+        self.question_entry.pack(pady=(0, 10), padx=20, fill="x")
+
+        # Answer Display Label with larger font and no "Answer:" prefix
+        self.answer_display = ctk.CTkLabel(
+            self.main_frame, text="", font=("Arial", 14), corner_radius=8,
+            anchor="center"
+        )
+        self.answer_display.pack(pady=(10, 20), padx=20, fill="x")
 
         # Variables to store extracted and summarized text
         self.extracted_text = ""
@@ -62,6 +103,8 @@ class BasicApp(ctk.CTk):
         # Select a PDF file
         file_path = filedialog.askopenfilename(filetypes=[("PDF files", "*.pdf")])
         if file_path:
+            # Update status to show PDF loaded
+            self.update_status("Status: PDF Loaded", "cyan")
             # Start extraction in a separate thread
             threading.Thread(target=self.extract_text_thread, args=(file_path,)).start()
 
@@ -70,25 +113,19 @@ class BasicApp(ctk.CTk):
             self.extracted_text = ''
             # Call the extract_text_with_progress function from pdf_extractor.py
             def progress_callback(progress):
-                # Schedule the progress bar update in the main thread
-                self.after(0, self.progress_bar.set, progress)
+                pass  # No progress bar to update here
             self.extracted_text = extract_text_with_progress(file_path, progress_callback)
-            # Reset the progress bar and show a message when done
-            self.after(0, self.progress_bar.set, 0)
+            # Update status when done
+            self.after(0, lambda: self.update_status("Status: PDF Loaded", "cyan"))
             self.after(0, messagebox.showinfo, "PDF Loaded", "PDF text successfully extracted!")
         except Exception as e:
             print(f"An error occurred: {e}")
             self.after(0, messagebox.showerror, "Error", f"An error occurred: {e}")
 
-    def summarize_pdf_standard(self):
-        if self.extracted_text:
-            # Perform standard summarization in a separate thread
-            threading.Thread(target=self.summarize_thread, args=(False,)).start()
-        else:
-            messagebox.showwarning("No Text", "Please load a PDF first.")
-
     def summarize_pdf_advanced(self):
         if self.extracted_text:
+            # Update status to show summarizing
+            self.update_status("Status: Summarizing...", "yellow")
             # Perform advanced summarization in a separate thread
             threading.Thread(target=self.summarize_thread, args=(True,)).start()
         else:
@@ -101,10 +138,14 @@ class BasicApp(ctk.CTk):
             self.summarized_text = summarize_text_advanced(self.extracted_text)
         # Update the summary display in the main thread
         self.after(0, self.update_summary_display)
+        # Update status to PDF loaded after summarizing
+        self.after(0, lambda: self.update_status("Status: PDF Loaded", "cyan"))
 
     def update_summary_display(self):
+        self.summary_display.configure(state="normal")
         self.summary_display.delete("1.0", "end")
         self.summary_display.insert("1.0", self.summarized_text)
+        self.summary_display.configure(state="disabled")
 
     def ask_question(self):
         question = self.question_entry.get()
@@ -120,7 +161,23 @@ class BasicApp(ctk.CTk):
         self.after(0, self.update_answer_display, answer)
 
     def update_answer_display(self, answer):
-        self.answer_display.configure(text=f"Answer: {answer['answer']}")
+        # Display the answer directly, with larger font
+        self.answer_display.configure(text=answer['answer'])
+
+    def clear_content(self):
+        """Clears the loaded PDF, summary, question, and response fields."""
+        self.extracted_text = ""
+        self.summarized_text = ""
+        self.summary_display.configure(state="normal")
+        self.summary_display.delete("1.0", "end")
+        self.summary_display.configure(state="disabled")
+        self.question_entry.delete(0, "end")
+        self.answer_display.configure(text="")
+        self.update_status("Status: No PDF Loaded", "red")
+
+    def update_status(self, text, color):
+        """Helper function to update the status text and color."""
+        self.status_label.configure(text=text, text_color=color)
 
     def quit(self):
         self.destroy()
