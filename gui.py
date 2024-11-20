@@ -1,8 +1,7 @@
-# gui.py
 import customtkinter as ctk
 from tkinter import filedialog, messagebox
 from qa import get_answer
-from summarize import summarize_by_sections
+from summarize import summarize_text_advanced
 import threading
 from pdf_extractor import extract_text_with_progress
 
@@ -31,9 +30,9 @@ class BasicApp(ctk.CTk):
         self.progress_bar.pack(pady=10)
         self.progress_bar.set(0)
 
-        # Button to Summarize PDF
-        self.summarize_button = ctk.CTkButton(self, text="Summarize PDF", command=self.summarize_pdf)
-        self.summarize_button.pack(pady=10)
+        # Button to Summarize PDF - Standard and Advanced
+        self.summarize_button_standard = ctk.CTkButton(self, text="Summarize PDF", command=self.summarize_pdf_advanced)
+        self.summarize_button_standard.pack(pady=10)
 
         # Display Area for Summarized Text
         self.summary_display = ctk.CTkTextbox(self, width=500, height=150)
@@ -81,15 +80,25 @@ class BasicApp(ctk.CTk):
             print(f"An error occurred: {e}")
             self.after(0, messagebox.showerror, "Error", f"An error occurred: {e}")
 
-    def summarize_pdf(self):
+    def summarize_pdf_standard(self):
         if self.extracted_text:
-            # Perform summarization in a separate thread
-            threading.Thread(target=self.summarize_thread).start()
+            # Perform standard summarization in a separate thread
+            threading.Thread(target=self.summarize_thread, args=(False,)).start()
         else:
             messagebox.showwarning("No Text", "Please load a PDF first.")
 
-    def summarize_thread(self):
-        self.summarized_text = summarize_by_sections(self.extracted_text)
+    def summarize_pdf_advanced(self):
+        if self.extracted_text:
+            # Perform advanced summarization in a separate thread
+            threading.Thread(target=self.summarize_thread, args=(True,)).start()
+        else:
+            messagebox.showwarning("No Text", "Please load a PDF first.")
+
+    def summarize_thread(self, advanced=False):
+        if advanced:
+            self.summarized_text = summarize_text_advanced(self.extracted_text)
+        else:
+            self.summarized_text = summarize_text_advanced(self.extracted_text)
         # Update the summary display in the main thread
         self.after(0, self.update_summary_display)
 
