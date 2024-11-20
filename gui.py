@@ -2,7 +2,7 @@
 import customtkinter as ctk
 from tkinter import filedialog, messagebox
 from qa import get_answer
-from summarize import summarize_text
+from summarize import summarize_by_sections
 import threading
 from pdf_extractor import extract_text_with_progress
 
@@ -89,7 +89,7 @@ class BasicApp(ctk.CTk):
             messagebox.showwarning("No Text", "Please load a PDF first.")
 
     def summarize_thread(self):
-        self.summarized_text = summarize_text(self.extracted_text)
+        self.summarized_text = summarize_by_sections(self.extracted_text)
         # Update the summary display in the main thread
         self.after(0, self.update_summary_display)
 
